@@ -2,3 +2,7 @@
 build
 tags
 .editorconfig
+
+# Clion
+cmake-build-debug/
+.idea/
