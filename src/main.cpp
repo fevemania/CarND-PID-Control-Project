@@ -3,6 +3,7 @@
 #include "json.hpp"
 #include "PID.h"
 #include <math.h>
+#include <numeric>
 
 // for convenience
 using json = nlohmann::json;
@@ -33,15 +34,14 @@ int main()
   uWS::Hub h;
   
   // Manully tune the parameter.
-  PID pid(0.3, 0.003, 6.5);
+  PID pid(0.1, 0.003, 1.3);
+
+  std::vector<double> dp(3, 0.1);
+//  int count = 0;
+//  double best_err = std::numeric_limits<double>::max();
+//  const double DEFAULT_TOLERANCE = 0.001;
   
-  std::vector<double> dp(3, 1);
-  int count = 0;
-  double best_err = std::numeric_limits<double>::max();
-  const double DEFAULT_TOLERANCE = 0.001;
-  double err = 0.0;
-  
-  h.onMessage([&pid, &dp, &count, &best_err, &DEFAULT_TOLERANCE, &err](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&pid, &dp](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -62,26 +62,46 @@ int main()
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
-          
+
           pid.UpdateError(cte);
-          steer_value = pid.TotalError();
+          double curr_best_error = pid.TotalError();
+//          if (std::accumulate(dp.begin(), dp.end(), 0.0) > 0.00001)
+//          {
+//            for (int i = 0; i < 3; ++i) {
+//              pid.p[i] += dp[i];
+//              double temp_error = pid.TotalError();
+//              if (temp_error < curr_best_error) {
+//                curr_best_error = temp_error;
+//                dp[i] *= 1.1;
+//              } else {
+//                pid.p[i] -= 2 * dp[i];
+//                temp_error = pid.TotalError();
+//
+//                if (temp_error < curr_best_error) {
+//                  curr_best_error = temp_error;
+//                  dp[i] *= 1.1;
+//                } else {
+//                  pid.p[i] += dp[i];
+//                  dp[i] *= 0.9;
+//                }
+//              }
+//            }
+//            std::cout << "Kp: " << pid.p[0] << ", Ki: " << pid.p[1] << ", Kd: " << pid.p[2] << std::endl;
+//          }
+
+          steer_value = curr_best_error;
 
           if (steer_value > 1) {
             steer_value = 1;
           } else if (steer_value < -1) {
             steer_value = -1;
           }
-          
-          std::cout << "Kp: " << pid.p[0] << ", Ki: " << pid.p[1] << ", Kd: " << pid.p[2] << std::endl;
-
-          // DEBUG
-//          std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = 0.4;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          // std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
