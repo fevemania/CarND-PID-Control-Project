@@ -1,6 +1,19 @@
 # CarND-Controls-PID
 Self-Driving Car Engineer Nanodegree Program
 
+## Explanation of the effect of each PID coefficients
+
+* P: the gain coefficient that proportional to cross track error (cte). -> used to keep the trajectory around reference line.
+* I: the gain coefficient that sum up all the history cte to overcome system bias problem.
+  * finetune the 'I' coeff could make it faster to revise offset situation with respect to reference trajectory.
+* D: the gain coefficient that multiply with the differentiate of cte to overcome oscillation.
+  * the more larger the 'D' coeff, the resistance to avoid oscillation become stronger. if D too high, would eventually make steer overacting to slightly osillation.
+
+## My Strategy: manually tune PID coefficient 
+
+I choose to tune the coefficient of P first to decrease the degree of oscillation. Here, I choose 0.1 for P.
+Then, I tune both coefficients of D and I together to minimize the effect of oscillation. I choose 1.3 for D and 0.003 for I.
+
 ---
 
 ## Dependencies
